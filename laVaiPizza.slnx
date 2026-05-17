@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/laVaiPizza.Api/laVaiPizza.Api.csproj" />
+    <Project Path="src/laVaiPizza.Application/laVaiPizza.Application.csproj" />
+    <Project Path="src/laVaiPizza.Domain/laVaiPizza.Domain.csproj" />
+    <Project Path="src/laVaiPizza.Infrastructure/laVaiPizza.Infrastructure.csproj" />
+  </Folder>
+</Solution>
