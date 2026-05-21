@@ -10,8 +10,6 @@ using laVaiPizza.Application.Pedidos;
 using laVaiPizza.Application.Funcionarios;
 using laVaiPizza.Application.Auth;
 
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);

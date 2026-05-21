@@ -13,7 +13,7 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString));
+            options.UseSqlServer(connectionString));
 
         services.AddScoped<IPizzaRepository, PizzaRepository>();
         services.AddScoped<IClienteRepository, ClienteRepository>();
