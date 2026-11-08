@@ -1,0 +1,129 @@
+name: CI - Back-end
+
+# Roda a cada push na main e em cada pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Permissoes minimas: so ler o codigo (o job de imagem pede "packages: write" sozinho)
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------ compila o projeto
+  build:
+    name: Compilar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restaurar pacotes
+        run: dotnet restore src/laVaiPizza.Api/laVaiPizza.Api.csproj
+
+      # -warnaserror: qualquer aviso do compilador quebra o build (hoje o projeto tem 0 avisos)
+      - name: Compilar (Release)
+        run: dotnet build src/laVaiPizza.Api/laVaiPizza.Api.csproj -c Release --no-restore -warnaserror
+
+      - name: Publicar
+        run: dotnet publish src/laVaiPizza.Api/laVaiPizza.Api.csproj -c Release --no-build -o publish
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-publicada
+          path: publish
+          retention-days: 7
+
+  # ------------------------------------------------------------ confere o script do banco
+  # Roda o script_banco.sql do zero num SQL Server de verdade: se alguem quebrar uma tabela,
+  # trigger ou procedure, o pipeline avisa antes de chegar em producao.
+  banco:
+    name: Script do banco
+    runs-on: ubuntu-latest
+    env:
+      SA_PASSWORD: Ci-Senha-Forte-123!   # senha descartavel, so existe dentro deste job
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_PID: Express
+          MSSQL_SA_PASSWORD: Ci-Senha-Forte-123!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'Ci-Senha-Forte-123!' -Q 'SELECT 1' -b -o /dev/null"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 20s
+    steps:
+      - uses: actions/checkout@v4
+
+      # A propria imagem do SQL Server traz o sqlcmd; usamos como cliente na rede do host
+      - name: Executar script_banco.sql
+        run: |
+          docker run --rm --network host -v "$PWD/scripts:/scripts:ro" \
+            mcr.microsoft.com/mssql/server:2022-latest \
+            /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -b -I -f 65001 -i /scripts/script_banco.sql
+
+      - name: Conferir objetos criados
+        run: |
+          docker run --rm --network host mcr.microsoft.com/mssql/server:2022-latest \
+            /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$SA_PASSWORD" -d LaVaiPizzaDb -b -h -1 -W -Q "
+              SET NOCOUNT ON;
+              IF (SELECT COUNT(*) FROM Pizza) <> 6 THROW 50001, 'Esperava 6 pizzas', 1;
+              IF (SELECT COUNT(*) FROM Pedido) < 1000 THROW 50002, 'Dados de demonstracao ausentes', 1;
+              IF (SELECT COUNT(*) FROM sys.triggers WHERE name IN ('trg_ProtegerPizzas','trg_AuditoriaPreco','trg_HistoricoStatusPedido')) <> 3 THROW 50003, 'Faltam triggers', 1;
+              IF (SELECT COUNT(*) FROM sys.procedures WHERE name LIKE 'Obter%') < 7 THROW 50004, 'Faltam procedures de relatorio', 1;
+              EXEC ObterResumoDashboard;
+              PRINT 'Banco OK';"
+
+  # ------------------------------------------------------------ imagem Docker
+  imagem:
+    name: Imagem Docker
+    needs: [build, banco]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Nome da imagem em minusculas (exigencia do registro): ghcr.io/<dono>/<repositorio>
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha
+
+      - name: Entrar no GitHub Container Registry
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Em pull request so constroi (para provar que o Dockerfile funciona); na main tambem publica
+      - name: Construir${{ github.event_name == 'push' && ' e publicar' || '' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

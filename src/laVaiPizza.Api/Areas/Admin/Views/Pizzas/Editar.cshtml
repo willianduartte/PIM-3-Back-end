@@ -1,0 +1,120 @@
+@model PizzaEditarViewModel
+@inject IOptions<SiteOptions> Site
+@{
+    var pizza = Model.Pizza;
+    ViewData["Title"] = "Editar " + pizza.Nome;
+    var foto = Formatos.UrlImagem(pizza.ImagemUrl, Site.Value.UrlBase);
+    var tamanhos = new[] { ("Pequena", "Pequena"), ("Media", "Média"), ("Grande", "Grande") };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">
+        @pizza.Nome
+        @if (!pizza.Ativa)
+        {
+            <span class="badge text-bg-secondary align-middle">Desativada</span>
+        }
+    </h1>
+    <a class="btn btn-outline-secondary" asp-action="Index">Voltar para a lista</a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5">Dados</h2>
+                <form method="post" asp-action="Editar" asp-route-id="@pizza.Id" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Dados.Nome" class="form-label"></label>
+                        <input asp-for="Dados.Nome" class="form-control" maxlength="100" required />
+                        <span asp-validation-for="Dados.Nome" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Dados.Descricao" class="form-label"></label>
+                        <textarea asp-for="Dados.Descricao" class="form-control" rows="3" maxlength="300"></textarea>
+                        <span asp-validation-for="Dados.Descricao" class="text-danger small"></span>
+                    </div>
+                    <button type="submit" class="btn btn-lavai">Salvar dados</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="h5">Preços</h2>
+                <p class="text-secondary small">Cada alteração fica registrada no histórico de preços (quem mudou, de quanto para quanto e quando).</p>
+
+                @foreach (var (tamanho, rotulo) in tamanhos)
+                {
+                    var atual = pizza.Precos.FirstOrDefault(p => p.Tamanho == tamanho);
+                    <form method="post" asp-action="AlterarPreco" asp-route-id="@pizza.Id" class="row g-2 align-items-end mb-3">
+                        <input type="hidden" name="tamanho" value="@tamanho" />
+                        <div class="col-sm-5">
+                            <label for="preco-@tamanho" class="form-label mb-1">@rotulo</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R$</span>
+                                <input id="preco-@tamanho" name="preco" class="form-control" type="number" step="0.01" min="0.01" max="9999.99"
+                                       value="@(atual is null ? "" : Formatos.Numero(atual.Preco))" required />
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <button type="submit" class="btn btn-outline-primary w-100">Salvar preço</button>
+                        </div>
+                        <div class="col-sm-3 small text-secondary">
+                            @if (atual is not null)
+                            {
+                                <span>Alterado em @Formatos.DataHora(atual.AtualizadoEm)</span>
+                            }
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5">Foto</h2>
+                @if (foto != "")
+                {
+                    <img src="@foto" alt="Foto atual de @pizza.Nome" class="img-fluid rounded mb-3 foto-editar" />
+                }
+                else
+                {
+                    <p class="text-secondary">Esta pizza ainda não tem foto.</p>
+                }
+
+                <form method="post" asp-action="EnviarImagem" asp-route-id="@pizza.Id" enctype="multipart/form-data">
+                    <label for="arquivo" class="form-label">Enviar nova foto</label>
+                    <input id="arquivo" name="arquivo" type="file" class="form-control mb-2"
+                           accept="image/png,image/jpeg,image/webp" required />
+                    <div class="form-text mb-3">PNG, JPG ou WEBP, até 2 MB.</div>
+                    <button type="submit" class="btn btn-outline-primary">Enviar foto</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-danger-subtle">
+            <div class="card-body">
+                <h2 class="h5">Cardápio</h2>
+                @if (pizza.Ativa)
+                {
+                    <p class="text-secondary small">Desativar tira a pizza do site. Os pedidos antigos e os relatórios continuam intactos.</p>
+                    <form method="post" asp-action="Desativar" asp-route-id="@pizza.Id"
+                          data-confirmar="Tirar &quot;@pizza.Nome&quot; do cardápio?">
+                        <button type="submit" class="btn btn-outline-danger">Desativar pizza</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-secondary small">Esta pizza não aparece no site.</p>
+                    <form method="post" asp-action="Reativar" asp-route-id="@pizza.Id">
+                        <button type="submit" class="btn btn-outline-success">Reativar pizza</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

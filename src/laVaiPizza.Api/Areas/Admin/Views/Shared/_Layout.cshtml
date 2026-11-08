@@ -1,0 +1,104 @@
+@{
+    var logado = User.Identity?.IsAuthenticated == true;
+    var ehGerente = User.IsInRole(Cargos.Gerente);
+    var controller = (string?)ViewContext.RouteData.Values["controller"];
+    var action = (string?)ViewContext.RouteData.Values["action"];
+    string? Atual(bool condicao) => condicao ? "page" : null;
+}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>@ViewData["Title"] - LaVaiPizza Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/bootstrap.min.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/admin.css" asp-append-version="true" />
+</head>
+<body class="bg-body-tertiary">
+    <a class="visually-hidden-focusable skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark barra-lavai" aria-label="Menu do administrador">
+            <div class="container-xl">
+                <a class="navbar-brand fw-bold" asp-area="Admin" asp-controller="Home" asp-action="Index">🍕 LaVaiPizza <span class="fw-normal opacity-75">Admin</span></a>
+
+                @if (logado)
+                {
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal"
+                            aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menu">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="menuPrincipal">
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            @if (ehGerente)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @(controller == "Dashboard" ? "active" : "")" aria-current="@Atual(controller == "Dashboard")"
+                                       asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                                </li>
+                            }
+                            <li class="nav-item">
+                                <a class="nav-link @(controller == "Pedidos" ? "active" : "")" aria-current="@Atual(controller == "Pedidos")"
+                                   asp-area="Admin" asp-controller="Pedidos" asp-action="Index">Pedidos</a>
+                            </li>
+                            @if (ehGerente)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @(controller == "Pizzas" && action != "Historico" ? "active" : "")" aria-current="@Atual(controller == "Pizzas" && action != "Historico")"
+                                       asp-area="Admin" asp-controller="Pizzas" asp-action="Index">Pizzas</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link @(controller == "Promocoes" ? "active" : "")" aria-current="@Atual(controller == "Promocoes")"
+                                       asp-area="Admin" asp-controller="Promocoes" asp-action="Index">Promoções</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link @(controller == "Pizzas" && action == "Historico" ? "active" : "")" aria-current="@Atual(controller == "Pizzas" && action == "Historico")"
+                                       asp-area="Admin" asp-controller="Pizzas" asp-action="Historico">Histórico de preços</a>
+                                </li>
+                            }
+                        </ul>
+
+                        <form class="d-flex align-items-center gap-2 text-white" method="post"
+                              asp-area="Admin" asp-controller="Conta" asp-action="Sair">
+                            <span class="small">
+                                @User.Identity!.Name
+                                <span class="badge text-bg-light">@User.FindFirst("role")?.Value</span>
+                            </span>
+                            <button type="submit" class="btn btn-sm btn-outline-light">Sair</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </nav>
+    </header>
+
+    <main id="conteudo" class="container-xl py-4" tabindex="-1">
+        @if (TempData["Sucesso"] is string sucesso)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="status">
+                @sucesso
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar aviso"></button>
+            </div>
+        }
+        @if (TempData["Erro"] is string erro)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @erro
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar aviso"></button>
+            </div>
+        }
+
+        @RenderBody()
+    </main>
+
+    <footer class="container-xl py-3 text-secondary small">
+        LaVaiPizza &middot; Área administrativa &middot; PIM IV - UNIP
+    </footer>
+
+    <script src="~/lib/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
+    <script src="~/admin/admin.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

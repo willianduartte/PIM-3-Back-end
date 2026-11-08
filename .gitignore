@@ -416,3 +416,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Fotos enviadas pelo admin (mantem so a pasta)
+src/laVaiPizza.Api/wwwroot/uploads/*
+!src/laVaiPizza.Api/wwwroot/uploads/.gitkeep

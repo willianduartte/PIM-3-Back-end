@@ -1,0 +1,190 @@
+@model ResumoDashboard
+@{
+    ViewData["Title"] = "Dashboard";
+    var anoAtual = DateTime.Now.Year;
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Dashboard</h1>
+    <div class="d-flex align-items-center gap-3">
+        <span class="small text-secondary" id="atualizadoEm" role="status" aria-live="off">Atualizado agora</span>
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Pedidos" asp-action="Index">Ver fila de pedidos</a>
+    </div>
+</div>
+
+<div id="dashboard"
+     data-url-resumo="@Url.Action("Resumo", "Dashboard", new { area = "Admin" })"
+     data-url-dados="@Url.Action("Dados", "Dashboard", new { area = "Admin", nome = "__nome__" })"
+     data-url-csv="@Url.Action("Csv", "Dashboard", new { area = "Admin", nome = "__nome__" })">
+
+    @* ---------------------------------------------------------------- cartoes *@
+    <section aria-label="Indicadores" class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100 cartao-kpi"><div class="card-body">
+                <div class="text-secondary small">Pedidos hoje</div>
+                <div class="kpi" data-campo="pedidosHoje">@Model.PedidosHoje</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100 cartao-kpi"><div class="card-body">
+                <div class="text-secondary small">Faturamento hoje</div>
+                <div class="kpi" data-campo="faturamentoHoje">@Formatos.Moeda(Model.FaturamentoHoje)</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100 cartao-kpi"><div class="card-body">
+                <div class="text-secondary small">Pedidos no mês</div>
+                <div class="kpi" data-campo="pedidosMes">@Model.PedidosMes</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100 cartao-kpi"><div class="card-body">
+                <div class="text-secondary small">Faturamento no mês</div>
+                <div class="kpi" data-campo="faturamentoMes">@Formatos.Moeda(Model.FaturamentoMes)</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100 cartao-kpi"><div class="card-body">
+                <div class="text-secondary small">Ticket médio (mês)</div>
+                <div class="kpi" data-campo="ticketMedioMes">@Formatos.Moeda(Model.TicketMedioMes)</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100 cartao-kpi"><div class="card-body">
+                <div class="text-secondary small">Pedidos em aberto</div>
+                <div class="kpi" data-campo="pedidosEmAberto">@Model.PedidosEmAberto</div>
+            </div></div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100 cartao-kpi"><div class="card-body">
+                <div class="text-secondary small">Tempo médio de entrega (30 dias)</div>
+                <div class="kpi" data-campo="tempoMedioEntregaMin">@(Model.TempoMedioEntregaMin is { } t ? $"{t:0} min" : "-")</div>
+            </div></div>
+        </div>
+    </section>
+
+    @* ---------------------------------------------------------------- filtro de periodo *@
+    <div class="row g-2 align-items-end mb-3">
+        <div class="col-auto">
+            <label for="periodo" class="form-label mb-1">Período dos gráficos de vendas</label>
+            <select id="periodo" class="form-select">
+                <option value="0">Todo o período</option>
+                <option value="30">Últimos 30 dias</option>
+                <option value="90">Últimos 90 dias</option>
+                <option value="365">Últimos 12 meses</option>
+            </select>
+        </div>
+    </div>
+
+    @* ---------------------------------------------------------------- graficos *@
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <section class="card shadow-sm h-100" aria-labelledby="tMensal">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                        <h2 class="h6 mb-0" id="tMensal">Faturamento por mês</h2>
+                        <div class="d-flex gap-2">
+                            <label for="anoMensal" class="visually-hidden">Ano</label>
+                            <select id="anoMensal" class="form-select form-select-sm w-auto">
+                                <option value="@anoAtual">@anoAtual</option>
+                                <option value="@(anoAtual - 1)">@(anoAtual - 1)</option>
+                                <option value="@(anoAtual - 2)">@(anoAtual - 2)</option>
+                            </select>
+                            <a class="btn btn-sm btn-outline-secondary" data-csv="faturamento-mensal" href="#">CSV</a>
+                        </div>
+                    </div>
+                    <div class="grafico"><canvas id="gMensal" role="img" aria-label="Gráfico de barras do faturamento por mês"></canvas></div>
+                    <details class="mt-2"><summary class="small">Ver dados em tabela</summary><div id="tMensalTabela" class="table-responsive"></div></details>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-6">
+            <section class="card shadow-sm h-100" aria-labelledby="tDiario">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                        <h2 class="h6 mb-0" id="tDiario">Faturamento por dia</h2>
+                        <div class="d-flex gap-2">
+                            <label for="diasDiario" class="visually-hidden">Dias</label>
+                            <select id="diasDiario" class="form-select form-select-sm w-auto">
+                                <option value="7">7 dias</option>
+                                <option value="30" selected>30 dias</option>
+                                <option value="90">90 dias</option>
+                            </select>
+                            <a class="btn btn-sm btn-outline-secondary" data-csv="faturamento-diario" href="#">CSV</a>
+                        </div>
+                    </div>
+                    <div class="grafico"><canvas id="gDiario" role="img" aria-label="Gráfico de linha do faturamento por dia"></canvas></div>
+                    <details class="mt-2"><summary class="small">Ver dados em tabela</summary><div id="tDiarioTabela" class="table-responsive"></div></details>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-6">
+            <section class="card shadow-sm h-100" aria-labelledby="tRanking">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                        <h2 class="h6 mb-0" id="tRanking">Pizzas mais vendidas</h2>
+                        <a class="btn btn-sm btn-outline-secondary" data-csv="ranking-pizzas" href="#">CSV</a>
+                    </div>
+                    <div class="grafico"><canvas id="gRanking" role="img" aria-label="Gráfico de barras das pizzas mais vendidas"></canvas></div>
+                    <details class="mt-2"><summary class="small">Ver dados em tabela</summary><div id="tRankingTabela" class="table-responsive"></div></details>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <section class="card shadow-sm h-100" aria-labelledby="tTamanho">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                        <h2 class="h6 mb-0" id="tTamanho">Vendas por tamanho</h2>
+                        <a class="btn btn-sm btn-outline-secondary" data-csv="vendas-por-tamanho" href="#">CSV</a>
+                    </div>
+                    <div class="grafico"><canvas id="gTamanho" role="img" aria-label="Gráfico de rosca das vendas por tamanho"></canvas></div>
+                    <details class="mt-2"><summary class="small">Ver dados em tabela</summary><div id="tTamanhoTabela" class="table-responsive"></div></details>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <section class="card shadow-sm h-100" aria-labelledby="tStatus">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                        <h2 class="h6 mb-0" id="tStatus">Pedidos por status</h2>
+                        <a class="btn btn-sm btn-outline-secondary" data-csv="pedidos-por-status" href="#">CSV</a>
+                    </div>
+                    <div class="grafico"><canvas id="gStatus" role="img" aria-label="Gráfico de rosca dos pedidos por status"></canvas></div>
+                    <details class="mt-2"><summary class="small">Ver dados em tabela</summary><div id="tStatusTabela" class="table-responsive"></div></details>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-12">
+            <section class="card shadow-sm" aria-labelledby="tHorarios">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                        <h2 class="h6 mb-0" id="tHorarios">Horários de pico (pedidos por hora do dia)</h2>
+                        <div class="d-flex gap-2">
+                            <label for="diasHorarios" class="visually-hidden">Dias</label>
+                            <select id="diasHorarios" class="form-select form-select-sm w-auto">
+                                <option value="7">7 dias</option>
+                                <option value="30" selected>30 dias</option>
+                                <option value="90">90 dias</option>
+                            </select>
+                            <a class="btn btn-sm btn-outline-secondary" data-csv="horarios-pico" href="#">CSV</a>
+                        </div>
+                    </div>
+                    <div class="grafico grafico-baixo"><canvas id="gHorarios" role="img" aria-label="Gráfico de barras dos pedidos por hora do dia"></canvas></div>
+                    <details class="mt-2"><summary class="small">Ver dados em tabela</summary><div id="tHorariosTabela" class="table-responsive"></div></details>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="erroDashboard" class="alert alert-danger mt-3" role="alert" hidden></div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
+    <script src="~/admin/dashboard.js" asp-append-version="true"></script>
+}
