@@ -1,0 +1,45 @@
+@{
+    ViewData["Title"] = "Pedidos";
+    var cargo = User.FindFirst("role")?.Value ?? "";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+        <h1 class="h3 mb-0">Fila de pedidos</h1>
+        <p class="text-secondary small mb-0" id="subtitulo">
+            @(cargo switch
+            {
+                Cargos.Pizzaiolo => "Pedidos para preparar. Quando a pizza estiver pronta, marque como pronta para coleta.",
+                Cargos.Entregador => "Pedidos prontos para coleta e as suas entregas em andamento.",
+                _ => "Todos os pedidos em aberto, em tempo real."
+            })
+        </p>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+        @if (cargo == Cargos.Gerente)
+        {
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="verEntregues" />
+                <label class="form-check-label" for="verEntregues">Mostrar entregues recentes</label>
+            </div>
+        }
+        <span class="small text-secondary" id="statusConexao" role="status" aria-live="off">Carregando...</span>
+    </div>
+</div>
+
+@* Token antiforgery usado pelo JavaScript ao mover um pedido *@
+<form id="formToken">@Html.AntiForgeryToken()</form>
+
+<div id="avisos" class="visually-hidden" role="status" aria-live="polite"></div>
+<div id="alertaErro" class="alert alert-danger" role="alert" hidden></div>
+
+<div id="quadro" class="row g-3"
+     data-cargo="@cargo"
+     data-url-fila="@Url.Action("Fila", "Pedidos", new { area = "Admin" })"
+     data-url-status="@Url.Action("AtualizarStatus", "Pedidos", new { area = "Admin", id = 0 })"
+     data-url-entrar="@Url.Action("Entrar", "Conta", new { area = "Admin" })">
+</div>
+
+@section Scripts {
+    <script src="~/admin/pedidos.js" asp-append-version="true"></script>
+}

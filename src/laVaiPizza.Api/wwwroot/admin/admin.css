@@ -1,0 +1,142 @@
+:root {
+  --lavai-laranja: #f27405;
+  --lavai-laranja-escuro: #b35400; /* contraste >= 4,5:1 com texto branco */
+  --lavai-marrom: #3c2a21;
+}
+
+.barra-lavai {
+  background-color: var(--lavai-marrom);
+}
+
+.btn-lavai {
+  --bs-btn-color: #fff;
+  --bs-btn-bg: var(--lavai-laranja-escuro);
+  --bs-btn-border-color: var(--lavai-laranja-escuro);
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #8f4300;
+  --bs-btn-hover-border-color: #8f4300;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #7a3a00;
+  --bs-btn-active-border-color: #7a3a00;
+  --bs-btn-disabled-bg: #b5b5b5;
+  --bs-btn-disabled-border-color: #b5b5b5;
+}
+
+/* Foco bem visivel para quem navega pelo teclado */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--lavai-laranja);
+  outline-offset: 2px;
+}
+
+.skip-link:focus {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2000;
+  background: #fff;
+  padding: 8px 14px;
+  border-radius: 6px;
+}
+
+main:focus {
+  outline: none;
+}
+
+/* Pizzas */
+.miniatura {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 50%;
+  background: #eee;
+}
+.foto-editar {
+  max-height: 260px;
+  object-fit: cover;
+  width: 100%;
+}
+.descricao-curta {
+  max-width: 340px;
+}
+
+/* Dashboard */
+.kpi {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--lavai-marrom);
+}
+.grafico {
+  position: relative;
+  height: 280px;
+}
+.grafico-baixo {
+  height: 220px;
+}
+
+/* Fila de pedidos */
+.coluna-pedidos {
+  background: #fff;
+  border-radius: 0.5rem;
+  min-height: 200px;
+}
+.coluna-pedidos .lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+.pedido-card {
+  border-left: 5px solid var(--lavai-laranja);
+}
+.pedido-card[data-status='Aguardando Coleta'] {
+  border-left-color: #b58900;
+}
+.pedido-card[data-status='Saiu para Entrega'] {
+  border-left-color: #0d6efd;
+}
+.pedido-card[data-status='Entregue'] {
+  border-left-color: #198754;
+  opacity: 0.8;
+}
+.pedido-card.novo {
+  animation: pulsar 1s ease-in-out 6;
+}
+.pedido-card .itens {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.1rem;
+}
+
+@keyframes pulsar {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(242, 116, 5, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(242, 116, 5, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pedido-card.novo {
+    animation: none;
+    outline: 3px solid var(--lavai-laranja);
+  }
+}
+
+/* Botao secundario com contraste suficiente (o padrao do Bootstrap usa #6c757d) */
+.btn-outline-secondary {
+  --bs-btn-color: #565e64;
+  --bs-btn-border-color: #565e64;
+  --bs-btn-hover-bg: #565e64;
+  --bs-btn-hover-border-color: #565e64;
+  --bs-btn-active-bg: #565e64;
+  --bs-btn-active-border-color: #565e64;
+}
+.text-secondary {
+  color: #565e64 !important;
+}

@@ -1,40 +1,22 @@
-﻿using laVaiPizza.Application.Abstractions;
-using laVaiPizza.Domain.Entities;
+using laVaiPizza.Application.Abstractions;
 
 namespace laVaiPizza.Application.Funcionarios;
 
 public class FuncionarioService
 {
-    private readonly IFuncionarioRepository _repository;
+    private readonly IFuncionarioRepository _funcionarioRepository;
 
-    public FuncionarioService(IFuncionarioRepository repository)
+    public FuncionarioService(IFuncionarioRepository funcionarioRepository)
     {
-        _repository = repository;
+        _funcionarioRepository = funcionarioRepository;
     }
 
-    public async Task<IEnumerable<FuncionarioResponse>> GetFuncionariosAsync()
+    public async Task<IReadOnlyList<FuncionarioResponse>> ListarAsync(CancellationToken cancellationToken = default)
     {
-        var lista = await _repository.GetAllAsync();
-        return lista.Select(f => new FuncionarioResponse(f.Id, f.Nome, f.Cargo, f.Telefone ?? "", f.LoginId));
-    }
+        var funcionarios = await _funcionarioRepository.GetAllAsync(cancellationToken);
 
-    public async Task<FuncionarioResponse> CreateFuncionarioAsync(FuncionarioRequest request)
-    {
-        var funcionario = new Funcionario
-        {
-            Nome = request.Nome,
-            Cargo = request.Cargo,
-            Telefone = request.Telefone,
-            LoginId = request.LoginId
-        };
-
-        await _repository.AddAsync(funcionario);
-
-        return new FuncionarioResponse(funcionario.Id, funcionario.Nome, funcionario.Cargo, funcionario.Telefone, funcionario.LoginId);
-    }
-
-    public async Task DeleteFuncionarioAsync(int id)
-    {
-        await _repository.DeleteAsync(id);
+        return funcionarios
+            .Select(f => new FuncionarioResponse(f.Id, f.Nome, f.Login.Email, f.Cargo))
+            .ToList();
     }
 }

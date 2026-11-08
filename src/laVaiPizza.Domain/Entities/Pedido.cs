@@ -1,13 +1,23 @@
-﻿namespace laVaiPizza.Domain.Entities;
+using laVaiPizza.Domain.Constants;
 
-public sealed class Pedido
+namespace laVaiPizza.Domain.Entities;
+
+public class Pedido
 {
     public int Id { get; set; }
+
+    /// <summary>Codigo que o cliente usa para acompanhar o pedido (sem login).</summary>
+    public string CodigoAcompanhamento { get; set; } = string.Empty;
+
+    public decimal Subtotal { get; set; }
+    public decimal Desconto { get; set; }
+    public decimal TaxaEntrega { get; set; }
+    public decimal Total { get; set; }
+
+    public string Status { get; set; } = StatusPedido.EmPreparacao;
     public DateTime DataHora { get; set; } = DateTime.Now;
-    public string Status { get; set; } = "Em Preparação";
-    public decimal ValorTotal { get; set; }
-    public string? Endereco { get; set; }
     public int? TempoEstimado { get; set; }
+
     public int ClienteId { get; set; }
     public Cliente Cliente { get; set; } = null!;
 
@@ -16,5 +26,7 @@ public sealed class Pedido
 
     public int? FuncionarioEntregaId { get; set; }
     public Funcionario? FuncionarioEntrega { get; set; }
-    public ICollection<PedidoPizza> PedidoPizzas { get; set; } = new List<PedidoPizza>();
+
+    public ICollection<ItemPedido> Itens { get; set; } = new List<ItemPedido>();
+    public ICollection<PedidoStatusHistorico> HistoricoStatus { get; set; } = new List<PedidoStatusHistorico>();
 }

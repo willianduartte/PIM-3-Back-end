@@ -10,4 +10,9 @@
     <ProjectReference Include="..\laVaiPizza.Domain\laVaiPizza.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- IMemoryCache (cache do cardapio nos Services, como na aula de Web com .NET) -->
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
 </Project>

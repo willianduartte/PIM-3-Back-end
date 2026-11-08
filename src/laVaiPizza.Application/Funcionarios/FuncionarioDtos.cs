@@ -1,4 +1,4 @@
-﻿namespace laVaiPizza.Application.Funcionarios;
+namespace laVaiPizza.Application.Funcionarios;
 
-public record FuncionarioRequest(string Nome, string Cargo, string Telefone, int? LoginId);
-public record FuncionarioResponse(int Id, string Nome, string Cargo, string Telefone, int? LoginId);
+/// <summary>Dados publicos do funcionario (nunca inclui o hash da senha).</summary>
+public record FuncionarioResponse(int Id, string Nome, string Email, string Cargo);

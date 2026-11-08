@@ -1,4 +1,4 @@
-﻿using laVaiPizza.Application.Abstractions;
+using laVaiPizza.Application.Abstractions;
 using laVaiPizza.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,37 +13,22 @@ public class FuncionarioRepository : IFuncionarioRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Funcionario>> GetAllAsync()
+    public async Task<Funcionario?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        return await _context.Funcionarios.ToListAsync();
+        // O E-mail e unico (UQ_Login_Email) e a comparacao ignora maiusculas (collation do banco).
+        return await _context.Funcionarios
+            .AsNoTracking()
+            .Include(f => f.Login)
+            .FirstOrDefaultAsync(f => f.Login.Email == email, cancellationToken);
     }
 
-    public async Task<Funcionario?> GetByIdAsync(int id)
+    public async Task<IReadOnlyList<Funcionario>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Funcionarios
+            .AsNoTracking()
             .Include(f => f.Login)
-            .FirstOrDefaultAsync(f => f.Id == id);
-    }
-
-    public async Task AddAsync(Funcionario funcionario)
-    {
-        await _context.Funcionarios.AddAsync(funcionario);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task UpdateAsync(Funcionario funcionario)
-    {
-        _context.Funcionarios.Update(funcionario);
-        await _context.SaveChangesAsync();
-    }
-
-    public async Task DeleteAsync(int id)
-    {
-        var funcionario = await GetByIdAsync(id);
-        if (funcionario != null)
-        {
-            _context.Funcionarios.Remove(funcionario);
-            await _context.SaveChangesAsync();
-        }
+            .OrderBy(f => f.Cargo)
+            .ThenBy(f => f.Nome)
+            .ToListAsync(cancellationToken);
     }
 }

@@ -1,0 +1,80 @@
+@model IReadOnlyList<PromocaoAdminResponse>
+@{
+    ViewData["Title"] = "Promoções";
+
+    string Desconto(PromocaoAdminResponse p) => p.Tipo switch
+    {
+        TiposPromocao.Percentual => $"{p.Valor:0.##}% de desconto",
+        TiposPromocao.ValorFixo => $"{Formatos.Moeda(p.Valor)} de desconto",
+        _ => "Frete grátis"
+    };
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <h1 class="h3 mb-0">Promoções</h1>
+    <a class="btn btn-lavai" asp-action="Nova">Nova promoção</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive" tabindex="0" role="region" aria-label="Tabela de promoções (use as setas para rolar)">
+        <table class="table table-hover align-middle mb-0">
+            <caption class="visually-hidden">Promoções cadastradas</caption>
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Benefício</th>
+                    <th scope="col">Vale para</th>
+                    <th scope="col">Período</th>
+                    <th scope="col">Situação</th>
+                    <th scope="col"><span class="visually-hidden">Ações</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-secondary py-4">Nenhuma promoção cadastrada.</td></tr>
+                }
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td class="fw-semibold">@p.Nome</td>
+                        <td>
+                            @Desconto(p)
+                            @if (p.ValorMinimo is { } min)
+                            {
+                                <div class="small text-secondary">em pedidos a partir de @Formatos.Moeda(min)</div>
+                            }
+                        </td>
+                        <td>@(p.Pizza ?? "Pedido todo")</td>
+                        <td class="small">@Formatos.DataHora(p.Inicio)<br />até @Formatos.DataHora(p.Fim)</td>
+                        <td>
+                            @if (p.VigenteAgora)
+                            {
+                                <span class="badge text-bg-success">Vigente agora</span>
+                            }
+                            else if (!p.Ativa)
+                            {
+                                <span class="badge text-bg-secondary">Desativada</span>
+                            }
+                            else if (p.Inicio > DateTime.Now)
+                            {
+                                <span class="badge text-bg-info">Agendada</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-warning">Encerrada</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Editar" asp-route-id="@p.Id">Editar</a>
+                            <form class="d-inline" method="post" asp-action="Remover" asp-route-id="@p.Id"
+                                  data-confirmar="Remover a promoção &quot;@p.Nome&quot;?">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

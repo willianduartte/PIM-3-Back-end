@@ -1,4 +1,4 @@
-using laVaiPizza.Application.Abstractions;
+﻿using laVaiPizza.Application.Abstractions;
 using laVaiPizza.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -12,15 +12,17 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
 
+        // Scoped: um DbContext (e um repositorio) por requisicao HTTP.
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(connectionString));
 
         services.AddScoped<IPizzaRepository, PizzaRepository>();
-        services.AddScoped<IClienteRepository, ClienteRepository>();
-        services.AddScoped<IPedidoRepository, PedidoRepository>();
+        services.AddScoped<IPromocaoRepository, PromocaoRepository>();
         services.AddScoped<IFuncionarioRepository, FuncionarioRepository>();
-        services.AddScoped<ILoginRepository, LoginRepository>();
+        services.AddScoped<IPedidoRepository, PedidoRepository>();
+        services.AddScoped<IRelatorioRepository, RelatorioRepository>();
 
         return services;
     }
 }
+

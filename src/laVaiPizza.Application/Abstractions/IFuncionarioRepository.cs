@@ -1,12 +1,12 @@
-﻿using laVaiPizza.Domain.Entities;
+using laVaiPizza.Domain.Entities;
 
 namespace laVaiPizza.Application.Abstractions;
 
 public interface IFuncionarioRepository
 {
-    Task<IEnumerable<Funcionario>> GetAllAsync();
-    Task<Funcionario?> GetByIdAsync(int id);
-    Task AddAsync(Funcionario funcionario);
-    Task UpdateAsync(Funcionario funcionario);
-    Task DeleteAsync(int id);
+    /// <summary>Funcionario (com o Login carregado) pelo e-mail de acesso; nulo se nao existir.</summary>
+    Task<Funcionario?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>Todos os funcionarios com o Login carregado (somente leitura).</summary>
+    Task<IReadOnlyList<Funcionario>> GetAllAsync(CancellationToken cancellationToken = default);
 }
